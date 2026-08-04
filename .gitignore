@@ -1,0 +1,13 @@
+.idea/
+.vscode/
+*.iml
+
+backend/target/
+frontend/node_modules/
+frontend/dist/
+
+.env
+.mcp.local.json
+stitch.mcp.json
+.DS_Store
+Thumbs.db
