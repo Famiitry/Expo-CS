@@ -72,6 +72,7 @@ function App() {
   const [transfers, setTransfers] = useState<TransferSuggestion[]>([]);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("Datos demo cargados");
+  const [isImporting, setIsImporting] = useState(false);
 
   const loadData = async () => {
     const [dashboardResponse, materialsResponse, alertsResponse, transfersResponse] = await Promise.all([
@@ -103,18 +104,31 @@ function App() {
   const importExcel = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
-    setStatus(`Importando ${file.name}`);
-    const response = await fetch(`${API_BASE}/import`, {
-      method: "POST",
-      body: formData
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      setStatus(error.error ?? "No se pudo importar el Excel");
-      return;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 15000);
+    setIsImporting(true);
+    setStatus(`Importando ${file.name}...`);
+    try {
+      const response = await fetch(`${API_BASE}/import`, {
+        method: "POST",
+        body: formData,
+        signal: controller.signal
+      });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: "No se pudo importar el Excel" }));
+        setStatus(error.error ?? "No se pudo importar el Excel");
+        return;
+      }
+      await loadData();
+      setStatus(`Inventario actualizado desde ${file.name}`);
+    } catch (error) {
+      setStatus(error instanceof DOMException && error.name === "AbortError"
+        ? "La importacion tardo demasiado. Revisa el backend o intenta con otro Excel."
+        : "No se pudo conectar con el backend para importar el Excel.");
+    } finally {
+      window.clearTimeout(timeout);
+      setIsImporting(false);
     }
-    await loadData();
-    setStatus(`Inventario actualizado desde ${file.name}`);
   };
 
   if (!isLoggedIn) {
@@ -146,10 +160,10 @@ function App() {
             <p className="eyebrow">Gestion inteligente de inventario electrico</p>
             <h1>{viewTitle(activeView)}</h1>
           </div>
-          <label className="upload-button" title="Importar archivo Excel">
+          <label className={`upload-button ${isImporting ? "disabled" : ""}`} title="Importar archivo Excel">
             <Upload size={18} />
-            <span>Importar Excel</span>
-            <input type="file" accept=".xlsx,.xls" onChange={(event) => event.target.files?.[0] && importExcel(event.target.files[0])} />
+            <span>{isImporting ? "Importando..." : "Importar Excel"}</span>
+            <input disabled={isImporting} type="file" accept=".xlsx,.xls" onChange={(event) => event.target.files?.[0] && importExcel(event.target.files[0])} />
           </label>
         </header>
 
