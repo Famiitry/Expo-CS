@@ -73,6 +73,29 @@ Devuelve la explicacion asociada a una alerta o transferencia.
 - `GET /api/dashboard`
 - `POST /api/import`
 
+## MCP de activos electricos
+
+El MCP independiente `../electric-assets-mcp` consume los endpoints del backend cuando se configura:
+
+```text
+ASSETS_API_BASE=http://localhost:8080/api
+```
+
+Endpoints CRUD disponibles:
+
+- `GET /api/assets`
+- `GET /api/assets/{id}`
+- `POST /api/assets`
+- `PUT /api/assets/{id}`
+- `DELETE /api/assets/{id}`
+- `GET /api/assets/{id}/history`
+- `GET /api/assets/{id}/warranty`
+- `GET /api/assets/{id}/useful-life`
+- `GET /api/assets/criticality`
+- `POST /api/assets/{id}/installation`
+- `POST /api/assets/{id}/retire`
+- `POST /api/assets/{id}/location`
+
 ## Restricciones
 
 - No exponer credenciales de base de datos al MCP.
