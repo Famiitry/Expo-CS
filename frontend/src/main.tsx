@@ -176,9 +176,10 @@ function App() {
           <div className="brand-mark"><ShieldCheck size={22} /></div>
           <div>
             <strong>Smart Inventory</strong>
-            <span>CENTROSUR demo</span>
+            <span>Electrical Division</span>
           </div>
         </div>
+        <button className="new-transfer-button" onClick={() => setActiveView("transfers")}>+ Nueva transferencia</button>
         <nav className="nav-menu">
           <NavButton icon={<LayoutDashboard />} label="Dashboard" active={activeView === "dashboard"} onClick={() => setActiveView("dashboard")} />
           <NavButton icon={<Boxes />} label="Inventario" active={activeView === "inventory"} onClick={() => setActiveView("inventory")} />
@@ -186,7 +187,11 @@ function App() {
           <NavButton icon={<Bell />} label="Alertas" active={activeView === "alerts"} onClick={() => setActiveView("alerts")} />
           <NavButton icon={<RadioTower />} label="Activos" active={activeView === "assets"} onClick={() => setActiveView("assets")} />
         </nav>
-        <button className="logout-button" onClick={() => setIsLoggedIn(false)}><LogOut size={18} /> Salir</button>
+        <div className="sidebar-footer">
+          <button>Settings</button>
+          <button>Support</button>
+          <button className="logout-button" onClick={() => setIsLoggedIn(false)}><LogOut size={18} /> Salir</button>
+        </div>
       </aside>
 
       <main className="app-shell">
@@ -195,11 +200,18 @@ function App() {
             <p className="eyebrow">Gestión inteligente de inventario eléctrico</p>
             <h1>{viewTitle(activeView)}</h1>
           </div>
-          <label className={`upload-button ${isImporting ? "disabled" : ""}`} title="Importar archivo Excel">
-            <Upload size={18} />
-            <span>{isImporting ? "Importando..." : "Importar Excel"}</span>
-            <input disabled={isImporting} type="file" accept=".xlsx,.xls" onChange={(event) => event.target.files?.[0] && importExcel(event.target.files[0])} />
-          </label>
+          <div className="topbar-tools">
+            <div className="top-search"><Search size={15} /><input placeholder="Buscar..." /></div>
+            <div className="import-pill"><span></span> Import Status · Datos actualizados</div>
+            <button className="icon-button" title="Sincronizar">↻</button>
+            <button className="icon-button" title="Notificaciones"><Bell size={17} /></button>
+            <div className="avatar">AI</div>
+            <label className={`upload-button ${isImporting ? "disabled" : ""}`} title="Importar archivo Excel">
+              <Upload size={18} />
+              <span>{isImporting ? "Importando..." : "Importar Excel"}</span>
+              <input disabled={isImporting} type="file" accept=".xlsx,.xls" onChange={(event) => event.target.files?.[0] && importExcel(event.target.files[0])} />
+            </label>
+          </div>
         </header>
 
         <section className="status-strip">
@@ -260,7 +272,7 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
             <span>Empresa eléctrica demo</span>
             </div>
           </div>
-          <h1>Inventario critico con recomendaciones explicables.</h1>
+          <h1>Inventario crítico con recomendaciones explicables.</h1>
           <div className="login-kpis">
             <span>Excel</span>
             <ChevronRight size={18} />
@@ -303,7 +315,7 @@ function Metrics({ dashboard }: { dashboard: DashboardSummary | null }) {
   return (
     <section className="metric-grid" aria-label="Dashboard ejecutivo">
       <Metric icon={<Boxes />} label="Total materiales" value={dashboard?.totalMaterials ?? 0} />
-      <Metric icon={<AlertTriangle />} label="Materiales criticos" value={dashboard?.criticalMaterials ?? 0} tone="danger" />
+      <Metric icon={<AlertTriangle />} label="Materiales críticos" value={dashboard?.criticalMaterials ?? 0} tone="danger" />
       <Metric icon={<LayoutDashboard />} label="Alertas" value={dashboard?.alerts ?? 0} tone="warning" />
       <Metric icon={<ArrowRightLeft />} label="Transferencias" value={dashboard?.transferSuggestions ?? 0} tone="success" />
     </section>
@@ -460,12 +472,13 @@ function InventoryTable({ materials }: { materials: InventoryItem[] }) {
       <table>
         <thead>
           <tr>
-            <th>Codigo</th>
+            <th>Código</th>
             <th>Material</th>
-            <th>Categoria</th>
+            <th>Categoría</th>
             <th>Bodega</th>
             <th>Stock</th>
             <th>Criticidad</th>
+            <th>Acción</th>
           </tr>
         </thead>
         <tbody>
@@ -477,6 +490,7 @@ function InventoryTable({ materials }: { materials: InventoryItem[] }) {
               <td>{item.warehouse}</td>
               <td>{item.currentStock}/{item.minimumStock}</td>
               <td><Badge value={item.criticality} /></td>
+              <td><button className="row-action">Revisar</button></td>
             </tr>
           ))}
         </tbody>
@@ -490,11 +504,12 @@ function AlertsTable({ alerts }: { alerts: StockAlert[] }) {
     <table>
       <thead>
         <tr>
-          <th>Codigo</th>
+          <th>Código</th>
           <th>Material</th>
           <th>Bodega</th>
           <th>Stock</th>
           <th>Criticidad</th>
+          <th>Acción</th>
         </tr>
       </thead>
       <tbody>
@@ -505,6 +520,7 @@ function AlertsTable({ alerts }: { alerts: StockAlert[] }) {
             <td>{alert.warehouse}</td>
             <td>{alert.currentStock}/{alert.minimumStock}</td>
             <td><Badge value={alert.criticality} /></td>
+            <td><button className="row-action">Generar pedido</button></td>
           </tr>
         ))}
       </tbody>

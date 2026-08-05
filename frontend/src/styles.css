@@ -797,3 +797,304 @@ td {
     margin: 48px 0;
   }
 }
+
+/* Stitch-style operational shell */
+.workspace {
+  background: #f6f8fa;
+  grid-template-columns: 236px minmax(0, 1fr);
+}
+
+.sidebar {
+  background: #eef5f3;
+  border-right: 1px solid #dce8e5;
+  color: #0f172a;
+  gap: 18px;
+  padding: 26px 16px;
+}
+
+.brand {
+  padding: 8px 4px;
+}
+
+.brand-mark {
+  background: #00796b;
+  color: #ffffff;
+}
+
+.brand strong {
+  color: #00796b;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.brand span {
+  color: #475569;
+  font-size: 12px;
+}
+
+.new-transfer-button {
+  background: #0f8176;
+  border: 0;
+  border-radius: 5px;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 900;
+  min-height: 38px;
+}
+
+.nav-menu {
+  gap: 4px;
+  margin-top: 14px;
+}
+
+.nav-button {
+  border-radius: 0;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 800;
+  min-height: 46px;
+}
+
+.nav-button.active,
+.nav-button:hover {
+  background: #d9ebe7;
+  color: #006b61;
+}
+
+.nav-button.active {
+  box-shadow: inset 4px 0 0 #00796b;
+}
+
+.sidebar-footer {
+  border-top: 1px solid #dce8e5;
+  display: grid;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.sidebar-footer button {
+  background: transparent;
+  border: 0;
+  color: #334155;
+  cursor: pointer;
+  font-weight: 800;
+  min-height: 32px;
+  text-align: left;
+}
+
+.logout-button {
+  background: transparent;
+  color: #334155;
+  justify-content: flex-start;
+}
+
+.app-shell {
+  background: #f8fafc;
+  padding: 0;
+}
+
+.topbar {
+  background: #ffffff;
+  border-bottom: 1px solid #dce8e5;
+  margin: 0;
+  min-height: 72px;
+  padding: 14px 24px;
+}
+
+.topbar h1 {
+  font-size: 26px;
+}
+
+.topbar-tools {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.top-search {
+  align-items: center;
+  background: #f1f5f9;
+  border: 1px solid #d9e1e8;
+  border-radius: 4px;
+  display: flex;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 10px;
+  width: 250px;
+}
+
+.top-search input {
+  background: transparent;
+  border: 0;
+  outline: 0;
+  width: 100%;
+}
+
+.import-pill {
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #d9e1e8;
+  border-radius: 999px;
+  color: #00796b;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 900;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 12px;
+}
+
+.import-pill span {
+  background: #16a34a;
+  border-radius: 999px;
+  height: 7px;
+  width: 7px;
+}
+
+.icon-button {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #d9e1e8;
+  border-radius: 5px;
+  color: #00796b;
+  cursor: pointer;
+  display: inline-flex;
+  height: 34px;
+  justify-content: center;
+  width: 34px;
+}
+
+.avatar {
+  align-items: center;
+  background: #0f8176;
+  border-radius: 999px;
+  color: #ffffff;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 900;
+  height: 34px;
+  justify-content: center;
+  width: 34px;
+}
+
+.upload-button {
+  border-radius: 4px;
+  min-height: 34px;
+  padding: 0 12px;
+}
+
+.status-strip {
+  display: none;
+}
+
+.metric-grid,
+.dashboard-grid,
+.assets-layout,
+.panel,
+.module-actions,
+.action-notice {
+  margin: 18px 24px 0;
+}
+
+.metric-grid {
+  gap: 18px;
+}
+
+.metric,
+.panel {
+  border-color: #d9e1e8;
+  box-shadow: none;
+}
+
+.metric {
+  border-left: 4px solid #00796b;
+  min-height: 116px;
+}
+
+.metric-danger {
+  border-left-color: #ef4444;
+}
+
+.metric-warning {
+  border-left-color: #f59e0b;
+}
+
+.metric-success {
+  border-left-color: #00796b;
+}
+
+.panel h2 {
+  font-size: 18px;
+}
+
+th {
+  background: #f1f5f9;
+  color: #475569;
+  height: 44px;
+}
+
+td {
+  height: 52px;
+}
+
+.row-action {
+  background: #0f8176;
+  border: 0;
+  border-radius: 4px;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 900;
+  min-height: 30px;
+  padding: 0 10px;
+}
+
+.module-actions {
+  background: transparent;
+  display: flex;
+  gap: 10px;
+}
+
+.module-actions button {
+  border-radius: 4px;
+}
+
+.action-notice {
+  margin-bottom: 0;
+}
+
+.warehouse-row {
+  gap: 16px;
+}
+
+.warehouse-row::after {
+  background: #e5e7eb;
+  border-radius: 999px;
+  content: "";
+  flex: 1;
+  height: 8px;
+  order: 2;
+}
+
+.warehouse-row strong {
+  order: 3;
+}
+
+.recommendation {
+  background: #ffffff;
+}
+
+.tool-grid button,
+.tool-form button {
+  border-radius: 4px;
+}
+
+.dashboard-grid .panel,
+.assets-layout .panel {
+  margin: 0;
+}
+
+.app-shell > .panel {
+  margin: 18px 24px 0;
+}
