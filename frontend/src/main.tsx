@@ -78,6 +78,11 @@ type ElectricAsset = {
   historial: string[];
 };
 
+type AssetActionResult = {
+  title: string;
+  body: string;
+};
+
 const API_BASE = import.meta.env.VITE_API_BASE ?? "/api";
 type View = "dashboard" | "inventory" | "transfers" | "alerts" | "assets";
 
@@ -410,13 +415,31 @@ function AlertsTable({ alerts }: { alerts: StockAlert[] }) {
 }
 
 function AssetsPanel({ assets }: { assets: ElectricAsset[] }) {
+  const [selectedId, setSelectedId] = useState(assets[0]?.id ?? "");
+  const [location, setLocation] = useState("Bodega tecnica demo");
+  const [installYear, setInstallYear] = useState("2010");
+  const [result, setResult] = useState<AssetActionResult | null>(null);
   const currentYear = new Date().getFullYear();
+  const selectedAsset = assets.find((asset) => asset.id === selectedId) ?? assets[0];
   const businessQuery = assets.filter((asset) =>
     asset.tipo === "transformador"
     && currentYear - asset.anioInstalacion > 20
     && asset.fallasUltimosCincoAnios >= 3
     && !asset.reemplazoProgramado
   );
+
+  useEffect(() => {
+    if (!selectedId && assets[0]) setSelectedId(assets[0].id);
+  }, [assets, selectedId]);
+
+  const callAssetApi = async (title: string, path: string, options?: RequestInit) => {
+    const response = await fetch(`${API_BASE}${path}`, {
+      headers: { "Content-Type": "application/json", ...(options?.headers ?? {}) },
+      ...options
+    });
+    const text = response.status === 204 ? "Operacion completada" : JSON.stringify(await response.json(), null, 2);
+    setResult({ title, body: text });
+  };
 
   return (
     <section className="assets-layout">
@@ -429,6 +452,55 @@ function AssetsPanel({ assets }: { assets: ElectricAsset[] }) {
           {businessQuery.map((asset) => (
             <AssetCard asset={asset} key={asset.id} />
           ))}
+        </div>
+      </Panel>
+
+      <Panel title="Herramientas del activo">
+        <div className="tool-console">
+          <label>
+            Activo
+            <select value={selectedAsset?.id ?? ""} onChange={(event) => setSelectedId(event.target.value)}>
+              {assets.map((asset) => <option key={asset.id} value={asset.id}>{asset.id} - {asset.nombre}</option>)}
+            </select>
+          </label>
+
+          <div className="tool-grid">
+            <button onClick={() => selectedAsset && callAssetApi("consultar_activo", `/assets/${selectedAsset.id}`)}>Consultar activo</button>
+            <button onClick={() => selectedAsset && callAssetApi("consultar_historial_activo", `/assets/${selectedAsset.id}/history`)}>Historial</button>
+            <button onClick={() => selectedAsset && callAssetApi("consultar_garantia", `/assets/${selectedAsset.id}/warranty`)}>Garantia</button>
+            <button onClick={() => selectedAsset && callAssetApi("consultar_vida_util", `/assets/${selectedAsset.id}/useful-life`)}>Vida util</button>
+            <button onClick={() => selectedAsset && callAssetApi("evaluar_criticidad", `/assets/criticality?id=${selectedAsset.id}`)}>Criticidad</button>
+          </div>
+
+          <div className="tool-form">
+            <label>
+              Nueva ubicacion
+              <input value={location} onChange={(event) => setLocation(event.target.value)} />
+            </label>
+            <button onClick={() => selectedAsset && callAssetApi("cambiar_ubicacion", `/assets/${selectedAsset.id}/location`, {
+              method: "POST",
+              body: JSON.stringify({ nuevaUbicacion: location })
+            })}>Cambiar ubicacion</button>
+          </div>
+
+          <div className="tool-form">
+            <label>
+              Anio instalacion
+              <input value={installYear} onChange={(event) => setInstallYear(event.target.value)} />
+            </label>
+            <button onClick={() => selectedAsset && callAssetApi("registrar_instalacion", `/assets/${selectedAsset.id}/installation`, {
+              method: "POST",
+              body: JSON.stringify({ anioInstalacion: Number(installYear), ubicacion: selectedAsset.ubicacion })
+            })}>Registrar instalacion</button>
+            <button className="danger-action" onClick={() => selectedAsset && callAssetApi("registrar_retiro", `/assets/${selectedAsset.id}/retire`, {
+              method: "POST",
+              body: JSON.stringify({ motivo: "Retiro demo desde interfaz" })
+            })}>Registrar retiro</button>
+          </div>
+
+          {result && (
+            <pre className="tool-result"><strong>{result.title}</strong>{`\n${result.body}`}</pre>
+          )}
         </div>
       </Panel>
 
