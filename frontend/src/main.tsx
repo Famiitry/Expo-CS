@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   LogIn,
   LogOut,
+  RadioTower,
   Search,
   ShieldCheck,
   Upload
@@ -60,8 +61,25 @@ type DashboardSummary = {
   topTransfers: TransferSuggestion[];
 };
 
+type AssetCriticality = "alta" | "media" | "baja";
+
+type ElectricAsset = {
+  id: string;
+  tipo: string;
+  nombre: string;
+  ubicacion: string;
+  anioInstalacion: number;
+  estadoOperativo: string;
+  fallasUltimosCincoAnios: number;
+  garantiaVigente: boolean;
+  vidaUtilAnios: number;
+  reemplazoProgramado: boolean;
+  criticidad: AssetCriticality;
+  historial: string[];
+};
+
 const API_BASE = import.meta.env.VITE_API_BASE ?? "/api";
-type View = "dashboard" | "inventory" | "transfers" | "alerts";
+type View = "dashboard" | "inventory" | "transfers" | "alerts" | "assets";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -70,21 +88,24 @@ function App() {
   const [materials, setMaterials] = useState<InventoryItem[]>([]);
   const [alerts, setAlerts] = useState<StockAlert[]>([]);
   const [transfers, setTransfers] = useState<TransferSuggestion[]>([]);
+  const [assets, setAssets] = useState<ElectricAsset[]>([]);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("Datos demo cargados");
   const [isImporting, setIsImporting] = useState(false);
 
   const loadData = async () => {
-    const [dashboardResponse, materialsResponse, alertsResponse, transfersResponse] = await Promise.all([
+    const [dashboardResponse, materialsResponse, alertsResponse, transfersResponse, assetsResponse] = await Promise.all([
       fetch(`${API_BASE}/dashboard`),
       fetch(`${API_BASE}/materials`),
       fetch(`${API_BASE}/alerts`),
-      fetch(`${API_BASE}/transfers`)
+      fetch(`${API_BASE}/transfers`),
+      fetch(`${API_BASE}/assets`)
     ]);
     setDashboard(await dashboardResponse.json());
     setMaterials(await materialsResponse.json());
     setAlerts(await alertsResponse.json());
     setTransfers(await transfersResponse.json());
+    setAssets(await assetsResponse.json());
   };
 
   useEffect(() => {
@@ -150,6 +171,7 @@ function App() {
           <NavButton icon={<Boxes />} label="Inventario" active={activeView === "inventory"} onClick={() => setActiveView("inventory")} />
           <NavButton icon={<ArrowRightLeft />} label="Transferencias" active={activeView === "transfers"} onClick={() => setActiveView("transfers")} />
           <NavButton icon={<Bell />} label="Alertas" active={activeView === "alerts"} onClick={() => setActiveView("alerts")} />
+          <NavButton icon={<RadioTower />} label="Activos" active={activeView === "assets"} onClick={() => setActiveView("assets")} />
         </nav>
         <button className="logout-button" onClick={() => setIsLoggedIn(false)}><LogOut size={18} /> Salir</button>
       </aside>
@@ -192,6 +214,8 @@ function App() {
         {activeView === "transfers" && <TransfersPanel transfers={transfers} expanded />}
 
         {activeView === "alerts" && <AlertsPanel alerts={alerts} expanded />}
+
+        {activeView === "assets" && <AssetsPanel assets={assets} />}
       </main>
     </div>
   );
@@ -243,7 +267,8 @@ function viewTitle(view: View) {
     dashboard: "Dashboard ejecutivo",
     inventory: "Inventario",
     transfers: "Transferencias sugeridas",
-    alerts: "Alertas criticas"
+    alerts: "Alertas criticas",
+    assets: "Activos electricos"
   }[view];
 }
 
@@ -384,6 +409,88 @@ function AlertsTable({ alerts }: { alerts: StockAlert[] }) {
   );
 }
 
+function AssetsPanel({ assets }: { assets: ElectricAsset[] }) {
+  const currentYear = new Date().getFullYear();
+  const businessQuery = assets.filter((asset) =>
+    asset.tipo === "transformador"
+    && currentYear - asset.anioInstalacion > 20
+    && asset.fallasUltimosCincoAnios >= 3
+    && !asset.reemplazoProgramado
+  );
+
+  return (
+    <section className="assets-layout">
+      <Panel title="Consulta MCP demostrada">
+        <div className="mcp-query">
+          <span>Pregunta empresarial</span>
+          <strong>Transformadores con mas de 20 anios, tres o mas fallas y sin reemplazo programado.</strong>
+        </div>
+        <div className="asset-card-grid">
+          {businessQuery.map((asset) => (
+            <AssetCard asset={asset} key={asset.id} />
+          ))}
+        </div>
+      </Panel>
+
+      <Panel title="Todos los activos electricos">
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Activo</th>
+                <th>Tipo</th>
+                <th>Ubicacion</th>
+                <th>Edad</th>
+                <th>Fallas</th>
+                <th>Criticidad</th>
+              </tr>
+            </thead>
+            <tbody>
+              {assets.map((asset) => (
+                <tr key={asset.id}>
+                  <td>{asset.id}</td>
+                  <td>{asset.nombre}</td>
+                  <td>{asset.tipo}</td>
+                  <td>{asset.ubicacion}</td>
+                  <td>{currentYear - asset.anioInstalacion}</td>
+                  <td>{asset.fallasUltimosCincoAnios}</td>
+                  <td><AssetBadge value={asset.criticidad} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Panel>
+    </section>
+  );
+}
+
+function AssetCard({ asset }: { asset: ElectricAsset }) {
+  const age = new Date().getFullYear() - asset.anioInstalacion;
+  return (
+    <article className="asset-card">
+      <div className="asset-card-header">
+        <div>
+          <span>{asset.id}</span>
+          <strong>{asset.nombre}</strong>
+        </div>
+        <AssetBadge value={asset.criticidad} />
+      </div>
+      <dl className="asset-facts">
+        <div><dt>Ubicacion</dt><dd>{asset.ubicacion}</dd></div>
+        <div><dt>Edad</dt><dd>{age} anios</dd></div>
+        <div><dt>Fallas</dt><dd>{asset.fallasUltimosCincoAnios}</dd></div>
+        <div><dt>Reemplazo</dt><dd>{asset.reemplazoProgramado ? "Programado" : "No programado"}</dd></div>
+      </dl>
+      <p>{asset.estadoOperativo}. Vida util estimada: {asset.vidaUtilAnios} anios.</p>
+      <ul>
+        {asset.historial.slice(0, 3).map((event) => <li key={event}>{event}</li>)}
+      </ul>
+    </article>
+  );
+}
+
 function Metric({ icon, label, value, tone = "default" }: { icon: React.ReactNode; label: string; value: number; tone?: string }) {
   return (
     <article className={`metric metric-${tone}`}>
@@ -405,6 +512,10 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
 
 function Badge({ value }: { value: Criticality }) {
   return <span className={`badge badge-${value.toLowerCase()}`}>{value}</span>;
+}
+
+function AssetBadge({ value }: { value: AssetCriticality }) {
+  return <span className={`badge badge-${value}`}>{value.toUpperCase()}</span>;
 }
 
 createRoot(document.getElementById("root")!).render(<App />);
