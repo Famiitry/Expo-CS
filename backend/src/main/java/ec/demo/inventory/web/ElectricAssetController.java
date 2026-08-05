@@ -132,7 +132,7 @@ public class ElectricAssetController {
     private String explain(ElectricAsset asset) {
         int age = Year.now().getValue() - asset.anioInstalacion();
         if (age > 20 && asset.fallasUltimosCincoAnios() >= 3 && !asset.reemplazoProgramado()) {
-            return "Tiene " + age + " anios, " + asset.fallasUltimosCincoAnios() + " fallas recientes y no tiene reemplazo programado.";
+            return "Tiene " + age + " años, " + asset.fallasUltimosCincoAnios() + " fallas recientes y no tiene reemplazo programado.";
         }
         if (asset.estadoOperativo().equalsIgnoreCase("fuera de servicio")) {
             return "Esta fuera de servicio y requiere accion inmediata.";

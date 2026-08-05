@@ -76,7 +76,7 @@ Vista ejecutiva con metricas, inventario por bodega, alertas principales y trans
 
 ### Inventario
 
-Tabla consultable de materiales por codigo, material, categoria, bodega, stock y criticidad.
+Tabla consultable de materiales por código, material, categoría, bodega, stock y criticidad.
 
 ### Transferencias
 

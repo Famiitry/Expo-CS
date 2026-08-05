@@ -46,7 +46,7 @@ Nunca debe acceder directamente a la base de datos.
 
 ### consultar_material
 
-Busca materiales por codigo o texto del nombre.
+Busca materiales por código o texto del nombre.
 
 ### consultar_stock
 
@@ -73,7 +73,7 @@ Devuelve la explicacion asociada a una alerta o transferencia.
 - `GET /api/dashboard`
 - `POST /api/import`
 
-## MCP de activos electricos
+## MCP de activos eléctricos
 
 El MCP independiente `../electric-assets-mcp` consume los endpoints del backend cuando se configura:
 

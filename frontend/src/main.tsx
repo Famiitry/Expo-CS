@@ -83,6 +83,11 @@ type AssetActionResult = {
   body: string;
 };
 
+type UiActionResult = {
+  title: string;
+  message: string;
+};
+
 const API_BASE = import.meta.env.VITE_API_BASE ?? "/api";
 type View = "dashboard" | "inventory" | "transfers" | "alerts" | "assets";
 
@@ -97,6 +102,9 @@ function App() {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("Datos demo cargados");
   const [isImporting, setIsImporting] = useState(false);
+  const [inventoryAction, setInventoryAction] = useState<UiActionResult | null>(null);
+  const [transferAction, setTransferAction] = useState<UiActionResult | null>(null);
+  const [alertAction, setAlertAction] = useState<UiActionResult | null>(null);
 
   const loadData = async () => {
     const [dashboardResponse, materialsResponse, alertsResponse, transfersResponse, assetsResponse] = await Promise.all([
@@ -149,7 +157,7 @@ function App() {
       setStatus(`Inventario actualizado desde ${file.name}`);
     } catch (error) {
       setStatus(error instanceof DOMException && error.name === "AbortError"
-        ? "La importacion tardo demasiado. Revisa el backend o intenta con otro Excel."
+        ? "La importación tardó demasiado. Revisa el backend o intenta con otro Excel."
         : "No se pudo conectar con el backend para importar el Excel.");
     } finally {
       window.clearTimeout(timeout);
@@ -184,7 +192,7 @@ function App() {
       <main className="app-shell">
         <header className="topbar">
           <div>
-            <p className="eyebrow">Gestion inteligente de inventario electrico</p>
+            <p className="eyebrow">Gestión inteligente de inventario eléctrico</p>
             <h1>{viewTitle(activeView)}</h1>
           </div>
           <label className={`upload-button ${isImporting ? "disabled" : ""}`} title="Importar archivo Excel">
@@ -212,15 +220,29 @@ function App() {
         {activeView === "inventory" && (
           <Panel title="Inventario de materiales">
             <SearchBox query={query} setQuery={setQuery} />
+            <InventoryActions materials={filteredMaterials} onAction={setInventoryAction} />
+            {inventoryAction && <ActionNotice title={inventoryAction.title} message={inventoryAction.message} />}
             <InventoryTable materials={filteredMaterials} />
           </Panel>
         )}
 
-        {activeView === "transfers" && <TransfersPanel transfers={transfers} expanded />}
+        {activeView === "transfers" && (
+          <>
+            <TransferActions transfers={transfers} onAction={setTransferAction} />
+            {transferAction && <ActionNotice title={transferAction.title} message={transferAction.message} />}
+            <TransfersPanel transfers={transfers} expanded />
+          </>
+        )}
 
-        {activeView === "alerts" && <AlertsPanel alerts={alerts} expanded />}
+        {activeView === "alerts" && (
+          <>
+            <AlertActions alerts={alerts} onAction={setAlertAction} />
+            {alertAction && <ActionNotice title={alertAction.title} message={alertAction.message} />}
+            <AlertsPanel alerts={alerts} expanded />
+          </>
+        )}
 
-        {activeView === "assets" && <AssetsPanel assets={assets} />}
+        {activeView === "assets" && <AssetsPanel assets={assets} onRefresh={loadData} />}
       </main>
     </div>
   );
@@ -235,7 +257,7 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
             <div className="brand-mark"><ShieldCheck size={26} /></div>
             <div>
               <strong>Smart Inventory AI</strong>
-              <span>Empresa electrica demo</span>
+            <span>Empresa eléctrica demo</span>
             </div>
           </div>
           <h1>Inventario critico con recomendaciones explicables.</h1>
@@ -272,8 +294,8 @@ function viewTitle(view: View) {
     dashboard: "Dashboard ejecutivo",
     inventory: "Inventario",
     transfers: "Transferencias sugeridas",
-    alerts: "Alertas criticas",
-    assets: "Activos electricos"
+    alerts: "Alertas críticas",
+    assets: "Activos eléctricos"
   }[view];
 }
 
@@ -327,7 +349,7 @@ function TransfersPanel({ transfers, expanded = false }: { transfers: TransferSu
 
 function AlertsPanel({ alerts, expanded = false }: { alerts: StockAlert[]; expanded?: boolean }) {
   return (
-    <Panel title="Alertas criticas">
+    <Panel title="Alertas críticas">
       <div className={expanded ? "alert-cards" : "table-wrap"}>
         {expanded ? alerts.map((alert) => (
           <article className="alert-card" key={`${alert.code}-${alert.warehouse}`}>
@@ -351,7 +373,83 @@ function SearchBox({ query, setQuery }: { query: string; setQuery: (value: strin
   return (
     <div className="search-wrap">
       <Search size={17} />
-      <input className="search" placeholder="Buscar material, codigo o bodega" value={query} onChange={(event) => setQuery(event.target.value)} />
+      <input className="search" placeholder="Buscar material, código o bodega" value={query} onChange={(event) => setQuery(event.target.value)} />
+    </div>
+  );
+}
+
+function InventoryActions({ materials, onAction }: { materials: InventoryItem[]; onAction: (result: UiActionResult) => void }) {
+  const critical = materials.filter((item) => item.currentStock <= item.minimumStock);
+  const warehouses = new Set(materials.map((item) => item.warehouse)).size;
+  return (
+    <div className="module-actions">
+      <button onClick={() => onAction({
+        title: "Resumen de inventario",
+        message: `${materials.length} registros visibles, ${critical.length} materiales bajo mínimo y ${warehouses} bodegas involucradas.`
+      })}>Generar resumen</button>
+      <button onClick={() => onAction({
+        title: "Validación de stock",
+        message: materials.some((item) => item.currentStock < 0)
+          ? "Se detectaron registros con stock negativo."
+          : "Validación correcta: no hay stock negativo en los registros visibles."
+      })}>Validar stock</button>
+      <button onClick={() => onAction({
+        title: "Priorización",
+        message: critical.length
+          ? `Prioridad alta para ${critical[0].material} en ${critical[0].warehouse}.`
+          : "No hay materiales críticos en la vista actual."
+      })}>Priorizar críticos</button>
+    </div>
+  );
+}
+
+function TransferActions({ transfers, onAction }: { transfers: TransferSuggestion[]; onAction: (result: UiActionResult) => void }) {
+  const totalUnits = transfers.reduce((sum, transfer) => sum + transfer.suggestedQuantity, 0);
+  const top = transfers[0];
+  return (
+    <div className="module-actions">
+      <button onClick={() => onAction({
+        title: "Plan de transferencias",
+        message: `Se sugieren ${transfers.length} transferencias por ${totalUnits} unidades en total.`
+      })}>Generar plan</button>
+      <button onClick={() => onAction({
+        title: "Transferencia prioritaria",
+        message: top ? `${top.material}: mover ${top.suggestedQuantity} unidades desde ${top.originWarehouse} hacia ${top.destinationWarehouse}.` : "No hay transferencias sugeridas."
+      })}>Revisar prioridad</button>
+      <button onClick={() => onAction({
+        title: "Aprobación demo",
+        message: top ? `Transferencia de ${top.material} marcada como aprobada para demostración.` : "No hay transferencias para aprobar."
+      })}>Aprobar sugerencia</button>
+    </div>
+  );
+}
+
+function AlertActions({ alerts, onAction }: { alerts: StockAlert[]; onAction: (result: UiActionResult) => void }) {
+  const high = alerts.filter((alert) => alert.criticality === "ALTA");
+  const top = alerts[0];
+  return (
+    <div className="module-actions">
+      <button onClick={() => onAction({
+        title: "Resumen de alertas",
+        message: `${alerts.length} alertas activas. ${high.length} son de criticidad alta.`
+      })}>Generar resumen</button>
+      <button onClick={() => onAction({
+        title: "Atención inmediata",
+        message: top ? `${top.material} en ${top.warehouse}: stock ${top.currentStock}/${top.minimumStock}.` : "No hay alertas activas."
+      })}>Ver prioridad</button>
+      <button onClick={() => onAction({
+        title: "Caso de reposición",
+        message: top ? `Se generó un caso demo para reponer ${top.material} por déficit de ${top.deficit} unidades.` : "No hay déficit para reponer."
+      })}>Crear caso</button>
+    </div>
+  );
+}
+
+function ActionNotice({ title, message }: UiActionResult) {
+  return (
+    <div className="action-notice">
+      <strong>{title}</strong>
+      <span>{message}</span>
     </div>
   );
 }
@@ -414,7 +512,7 @@ function AlertsTable({ alerts }: { alerts: StockAlert[] }) {
   );
 }
 
-function AssetsPanel({ assets }: { assets: ElectricAsset[] }) {
+function AssetsPanel({ assets, onRefresh }: { assets: ElectricAsset[]; onRefresh: () => Promise<void> }) {
   const [selectedId, setSelectedId] = useState(assets[0]?.id ?? "");
   const [location, setLocation] = useState("Bodega tecnica demo");
   const [installYear, setInstallYear] = useState("2010");
@@ -437,8 +535,11 @@ function AssetsPanel({ assets }: { assets: ElectricAsset[] }) {
       headers: { "Content-Type": "application/json", ...(options?.headers ?? {}) },
       ...options
     });
-    const text = response.status === 204 ? "Operacion completada" : JSON.stringify(await response.json(), null, 2);
+    const text = response.status === 204 ? "Operación completada" : JSON.stringify(await response.json(), null, 2);
     setResult({ title, body: text });
+    if (options?.method && options.method !== "GET") {
+      await onRefresh();
+    }
   };
 
   return (
@@ -446,7 +547,7 @@ function AssetsPanel({ assets }: { assets: ElectricAsset[] }) {
       <Panel title="Consulta MCP demostrada">
         <div className="mcp-query">
           <span>Pregunta empresarial</span>
-          <strong>Transformadores con mas de 20 anios, tres o mas fallas y sin reemplazo programado.</strong>
+          <strong>Transformadores con más de 20 años, tres o más fallas y sin reemplazo programado.</strong>
         </div>
         <div className="asset-card-grid">
           {businessQuery.map((asset) => (
@@ -468,30 +569,30 @@ function AssetsPanel({ assets }: { assets: ElectricAsset[] }) {
             <button onClick={() => selectedAsset && callAssetApi("consultar_activo", `/assets/${selectedAsset.id}`)}>Consultar activo</button>
             <button onClick={() => selectedAsset && callAssetApi("consultar_historial_activo", `/assets/${selectedAsset.id}/history`)}>Historial</button>
             <button onClick={() => selectedAsset && callAssetApi("consultar_garantia", `/assets/${selectedAsset.id}/warranty`)}>Garantia</button>
-            <button onClick={() => selectedAsset && callAssetApi("consultar_vida_util", `/assets/${selectedAsset.id}/useful-life`)}>Vida util</button>
+            <button onClick={() => selectedAsset && callAssetApi("consultar_vida_util", `/assets/${selectedAsset.id}/useful-life`)}>Vida útil</button>
             <button onClick={() => selectedAsset && callAssetApi("evaluar_criticidad", `/assets/criticality?id=${selectedAsset.id}`)}>Criticidad</button>
           </div>
 
           <div className="tool-form">
             <label>
-              Nueva ubicacion
+              Nueva ubicación
               <input value={location} onChange={(event) => setLocation(event.target.value)} />
             </label>
             <button onClick={() => selectedAsset && callAssetApi("cambiar_ubicacion", `/assets/${selectedAsset.id}/location`, {
               method: "POST",
               body: JSON.stringify({ nuevaUbicacion: location })
-            })}>Cambiar ubicacion</button>
+            })}>Cambiar ubicación</button>
           </div>
 
           <div className="tool-form">
             <label>
-              Anio instalacion
+              Año instalación
               <input value={installYear} onChange={(event) => setInstallYear(event.target.value)} />
             </label>
             <button onClick={() => selectedAsset && callAssetApi("registrar_instalacion", `/assets/${selectedAsset.id}/installation`, {
               method: "POST",
               body: JSON.stringify({ anioInstalacion: Number(installYear), ubicacion: selectedAsset.ubicacion })
-            })}>Registrar instalacion</button>
+            })}>Registrar instalación</button>
             <button className="danger-action" onClick={() => selectedAsset && callAssetApi("registrar_retiro", `/assets/${selectedAsset.id}/retire`, {
               method: "POST",
               body: JSON.stringify({ motivo: "Retiro demo desde interfaz" })
@@ -504,7 +605,7 @@ function AssetsPanel({ assets }: { assets: ElectricAsset[] }) {
         </div>
       </Panel>
 
-      <Panel title="Todos los activos electricos">
+      <Panel title="Todos los activos eléctricos">
         <div className="table-wrap">
           <table>
             <thead>
@@ -512,7 +613,7 @@ function AssetsPanel({ assets }: { assets: ElectricAsset[] }) {
                 <th>ID</th>
                 <th>Activo</th>
                 <th>Tipo</th>
-                <th>Ubicacion</th>
+                  <th>Ubicación</th>
                 <th>Edad</th>
                 <th>Fallas</th>
                 <th>Criticidad</th>
@@ -550,12 +651,12 @@ function AssetCard({ asset }: { asset: ElectricAsset }) {
         <AssetBadge value={asset.criticidad} />
       </div>
       <dl className="asset-facts">
-        <div><dt>Ubicacion</dt><dd>{asset.ubicacion}</dd></div>
-        <div><dt>Edad</dt><dd>{age} anios</dd></div>
+        <div><dt>Ubicación</dt><dd>{asset.ubicacion}</dd></div>
+        <div><dt>Edad</dt><dd>{age} años</dd></div>
         <div><dt>Fallas</dt><dd>{asset.fallasUltimosCincoAnios}</dd></div>
         <div><dt>Reemplazo</dt><dd>{asset.reemplazoProgramado ? "Programado" : "No programado"}</dd></div>
       </dl>
-      <p>{asset.estadoOperativo}. Vida util estimada: {asset.vidaUtilAnios} anios.</p>
+      <p>{asset.estadoOperativo}. Vida útil estimada: {asset.vidaUtilAnios} años.</p>
       <ul>
         {asset.historial.slice(0, 3).map((event) => <li key={event}>{event}</li>)}
       </ul>

@@ -505,6 +505,42 @@ td {
   margin: 0;
 }
 
+.module-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.module-actions button {
+  background: #0f766e;
+  border: 0;
+  border-radius: 8px;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 900;
+  min-height: 40px;
+  padding: 0 14px;
+}
+
+.action-notice {
+  background: #f1f7f5;
+  border: 1px solid #cfe5df;
+  border-radius: 8px;
+  display: grid;
+  gap: 4px;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+}
+
+.action-notice strong {
+  color: #0f766e;
+}
+
+.action-notice span {
+  color: #415160;
+}
+
 .mcp-query {
   background: #f1f7f5;
   border: 1px solid #cfe5df;

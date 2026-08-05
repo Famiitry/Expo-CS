@@ -45,7 +45,7 @@ public class ElectricAssetService {
                         "2025-12-12: apertura no programada"
                 )),
                 new ElectricAsset("MD-120", "medidor", "Medidor inteligente residencial", "Cliente demo 4812", 2022, "operativo", 0, true, 15, false, "baja", List.of(
-                        "2022-02-20: instalacion",
+                        "2022-02-20: instalación",
                         "2024-08-03: lectura remota correcta"
                 ))
         ));
@@ -102,7 +102,7 @@ public class ElectricAssetService {
                 anioInstalacion, asset.estadoOperativo(), asset.fallasUltimosCincoAnios(),
                 asset.garantiaVigente(), asset.vidaUtilAnios(), asset.reemplazoProgramado(), asset.criticidad(),
                 asset.historial()
-        ), "instalacion registrada en " + (ubicacion == null ? asset.ubicacion() : ubicacion)));
+        ), "instalación registrada en " + (ubicacion == null ? asset.ubicacion() : ubicacion)));
     }
 
     public Optional<ElectricAsset> retire(String id, String motivo) {
@@ -118,7 +118,7 @@ public class ElectricAssetService {
                 asset.id(), asset.tipo(), asset.nombre(), nuevaUbicacion, asset.anioInstalacion(),
                 asset.estadoOperativo(), asset.fallasUltimosCincoAnios(), asset.garantiaVigente(),
                 asset.vidaUtilAnios(), asset.reemplazoProgramado(), asset.criticidad(), asset.historial()
-        ), "cambio de ubicacion a " + nuevaUbicacion));
+        ), "cambio de ubicación a " + nuevaUbicacion));
     }
 
     public String evaluateCriticality(ElectricAsset asset) {

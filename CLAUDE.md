@@ -18,7 +18,7 @@ Este archivo coordina el trabajo del proyecto. No duplica requisitos, reglas de 
 3. Implementar solo capacidades que aporten valor visible a una demostracion de 15 minutos.
 4. Evitar requisitos inventados. Si algo no aparece en la documentacion, proponerlo antes de implementarlo.
 5. Mantener backend, frontend y MCP alineados con los mismos nombres de dominio: material, bodega, stock, alerta, transferencia y recomendacion.
-6. Al cambiar comportamiento funcional, actualizar primero los documentos afectados y luego el codigo.
+6. Al cambiar comportamiento funcional, actualizar primero los documentos afectados y luego el código.
 
 ## Criterios de consistencia
 
